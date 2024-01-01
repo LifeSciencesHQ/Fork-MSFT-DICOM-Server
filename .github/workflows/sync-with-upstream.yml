@@ -16,13 +16,25 @@ jobs:
     - name: Add upstream remote
       run: git remote add upstream https://github.com/microsoft/dicom-server.git
 
-    - name: Fetch from upstream
-      run: git fetch upstream
+    - name: Fetch from upstream main
+      run: git fetch upstream main
 
-    - name: Update local main
+    - name: Check for changes from upstream
+      id: upstream_changes
+      run: |
+        if git diff --quiet main upstream/main; then
+          echo "No new changes from upstream"
+          echo "::set-output name=changes::false"
+        else
+          echo "New changes found from upstream"
+          echo "::set-output name=changes::true"
+        fi
+
+    - name: Update local main from upstream
+      if: steps.upstream_changes.outputs.changes == 'true'
       run: |
         git checkout main
-        git merge upstream/main
+        git merge upstream/main --allow-unrelated-histories
 
     - name: Push updates
       uses: ad-m/github-push-action@master
