@@ -125,4 +125,18 @@ internal sealed class SqlIndexDataStore : IIndexDataStore
         ISqlIndexDataStore store = await _cache.GetAsync(cancellationToken: cancellationToken);
         await store.UpdateFrameDataAsync(partitionKey, versions, hasFrameMetadata, cancellationToken);
     }
+
+    public async Task UpdateFilePropertiesContentLengthAsync(
+        IReadOnlyDictionary<long, FileProperties> filePropertiesByWatermark,
+        CancellationToken cancellationToken = default)
+    {
+        ISqlIndexDataStore store = await _cache.GetAsync(cancellationToken: cancellationToken);
+        await store.UpdateFilePropertiesContentLengthAsync(filePropertiesByWatermark, cancellationToken);
+    }
+
+    public async Task<IndexedFileProperties> GetIndexedFileMetricsAsync(CancellationToken cancellationToken = default)
+    {
+        ISqlIndexDataStore store = await _cache.GetAsync(cancellationToken: cancellationToken);
+        return await store.GetIndexedFileMetricsAsync(cancellationToken);
+    }
 }

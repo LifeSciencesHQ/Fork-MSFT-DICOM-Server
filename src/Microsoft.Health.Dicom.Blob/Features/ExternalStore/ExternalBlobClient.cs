@@ -54,6 +54,9 @@ internal class ExternalBlobClient : IBlobClient
         _isPartitionEnabled = EnsureArg.IsNotNull(featureConfiguration, nameof(featureConfiguration)).Value.EnableDataPartitions;
         _logger = EnsureArg.IsNotNull(logger, nameof(logger));
         _logger.LogInformation("External blob client registered. Partition feature flag is set to {IsPartitionEnabled}", _isPartitionEnabled);
+
+        ExternalStoreHealthExpiryHttpPipelinePolicy httpPolicy = new ExternalStoreHealthExpiryHttpPipelinePolicy(_externalStoreOptions);
+        _blobClientOptions.AddPolicy(httpPolicy, HttpPipelinePosition.PerCall);
     }
 
     public bool IsExternal => true;
@@ -94,7 +97,7 @@ internal class ExternalBlobClient : IBlobClient
 
     private static string SanitizeServiceStorePath(string path)
     {
-        return !path.EndsWith("/", StringComparison.OrdinalIgnoreCase) ? path + "/" : path;
+        return !path.EndsWith('/') ? path + "/" : path;
     }
 
     /// <summary>

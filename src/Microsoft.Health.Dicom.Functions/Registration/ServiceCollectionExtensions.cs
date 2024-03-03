@@ -20,9 +20,11 @@ using Microsoft.Health.Dicom.Core.Features.Telemetry;
 using Microsoft.Health.Dicom.Core.Modules;
 using Microsoft.Health.Dicom.Core.Registration;
 using Microsoft.Health.Dicom.Functions.Configuration;
+using Microsoft.Health.Dicom.Functions.ContentLengthBackFill;
 using Microsoft.Health.Dicom.Functions.DataCleanup;
 using Microsoft.Health.Dicom.Functions.Export;
 using Microsoft.Health.Dicom.Functions.Indexing;
+using Microsoft.Health.Dicom.Functions.MetricsCollection;
 using Microsoft.Health.Dicom.Functions.Update;
 using Microsoft.Health.Dicom.SqlServer.Registration;
 using Microsoft.Health.Extensions.DependencyInjection;
@@ -60,11 +62,13 @@ public static class ServiceCollectionExtensions
             .AddRecyclableMemoryStreamManager(configuration)
             .AddFellowOakDicomExtension()
             .AddFunctionsOptions<DataCleanupOptions>(configuration, DataCleanupOptions.SectionName)
+            .AddFunctionsOptions<ContentLengthBackFillOptions>(configuration, ContentLengthBackFillOptions.SectionName)
             .AddFunctionsOptions<ExportOptions>(configuration, ExportOptions.SectionName)
             .AddFunctionsOptions<QueryTagIndexingOptions>(configuration, QueryTagIndexingOptions.SectionName, bindNonPublicProperties: true)
             .AddFunctionsOptions<PurgeHistoryOptions>(configuration, PurgeHistoryOptions.SectionName, isDicomFunction: false)
             .AddFunctionsOptions<FeatureConfiguration>(configuration, "DicomServer:Features", isDicomFunction: false)
             .AddFunctionsOptions<UpdateOptions>(configuration, UpdateOptions.SectionName)
+            .AddFunctionsOptions<IndexMetricsCollectionOptions>(configuration, IndexMetricsCollectionOptions.SectionName)
             .ConfigureDurableFunctionSerialization()
             .AddJsonSerializerOptions(o => o.ConfigureDefaultDicomSettings())
             .AddSingleton<UpdateMeter>()

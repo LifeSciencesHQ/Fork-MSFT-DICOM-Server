@@ -448,7 +448,7 @@ namespace Microsoft.Health.FellowOakDicom.Serialization
                 {
                     numberWriterAction();
                 }
-                catch (FormatException)
+                catch (Exception ex) when (ex is FormatException || ex is OverflowException)
                 {
                     if (_numberSerializationMode == NumberSerializationMode.PreferablyAsNumber)
                     {
@@ -1132,7 +1132,7 @@ namespace Microsoft.Health.FellowOakDicom.Serialization
         }
 
 
-        private static IByteBuffer ReadJsonInlineBinary(ref Utf8JsonReader reader)
+        private static MemoryByteBuffer ReadJsonInlineBinary(ref Utf8JsonReader reader)
         {
             reader.AssumeAndSkip(JsonTokenType.StartArray);
             if (reader.TokenType != JsonTokenType.String) { throw new JsonException("Malformed DICOM json. string expected"); }

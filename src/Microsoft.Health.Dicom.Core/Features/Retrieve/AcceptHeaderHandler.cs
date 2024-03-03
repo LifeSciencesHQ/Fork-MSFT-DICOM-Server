@@ -79,7 +79,7 @@ public class AcceptHeaderHandler : IAcceptHeaderHandler
                 {
                     selectedHeader = new AcceptHeader(
                         GetMediaTypesString(header.MediaType, resourceType),
-                        header.PayloadType,
+                        GetPayloadType(header),
                         descriptor.GetTransferSyntax(header),
                         header.Quality);
 
@@ -103,6 +103,16 @@ public class AcceptHeaderHandler : IAcceptHeaderHandler
     {
         bool isQualityGreater = (header.Quality ?? AcceptHeader.DefaultQuality) >= (selectedHeader.Quality ?? AcceptHeader.DefaultQuality);
         return (header.TransferSyntax.Value == DicomTransferSyntaxUids.Original && isQualityGreater);
+    }
+
+    private static PayloadTypes GetPayloadType(AcceptHeader header)
+    {
+        if (header.MediaType != KnownContentTypes.AnyMediaType)
+        {
+            return header.PayloadType;
+        }
+
+        return PayloadTypes.MultipartRelated;
     }
 
     // If the media type is */* then we need to return the default media type for the resource type
@@ -175,12 +185,12 @@ public class AcceptHeaderHandler : IAcceptHeaderHandler
         };
     }
 
-    private static ISet<string> GetAcceptableTransferSyntaxSet(params DicomTransferSyntax[] transferSyntaxes)
+    private static HashSet<string> GetAcceptableTransferSyntaxSet(params DicomTransferSyntax[] transferSyntaxes)
     {
         return GetAcceptableTransferSyntaxSet(transferSyntaxes.Select(item => item.UID.UID).ToArray());
     }
 
-    private static ISet<string> GetAcceptableTransferSyntaxSet(params string[] transferSyntaxes)
+    private static HashSet<string> GetAcceptableTransferSyntaxSet(params string[] transferSyntaxes)
     {
         return new HashSet<string>(transferSyntaxes, StringComparer.InvariantCultureIgnoreCase);
     }

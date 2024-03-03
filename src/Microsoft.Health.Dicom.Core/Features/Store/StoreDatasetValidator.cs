@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -35,22 +36,17 @@ public class StoreDatasetValidator : IStoreDatasetValidator
     private readonly IDicomRequestContextAccessor _dicomRequestContextAccessor;
     private readonly ILogger _logger;
 
-    private static readonly IReadOnlySet<DicomTag> RequiredCoreTags = new HashSet<DicomTag>()
-    {
+    private static readonly ImmutableHashSet<DicomTag> RequiredCoreTags = ImmutableHashSet.Create(
         DicomTag.StudyInstanceUID,
         DicomTag.SeriesInstanceUID,
         DicomTag.SOPInstanceUID,
         DicomTag.PatientID,
-        DicomTag.SOPClassUID,
-    };
+        DicomTag.SOPClassUID);
 
-    private static readonly IReadOnlySet<DicomTag> RequiredV2CoreTags = new HashSet<DicomTag>()
-    {
+    private static readonly ImmutableHashSet<DicomTag> RequiredV2CoreTags = ImmutableHashSet.Create(
         DicomTag.StudyInstanceUID,
         DicomTag.SeriesInstanceUID,
-        DicomTag.SOPInstanceUID,
-        DicomTag.SOPClassUID,
-    };
+        DicomTag.SOPInstanceUID);
 
     public StoreDatasetValidator(
         IOptions<FeatureConfiguration> featureConfiguration,
@@ -144,23 +140,8 @@ public class StoreDatasetValidator : IStoreDatasetValidator
 
         // The format of the identifiers will be validated by fo-dicom.
         string studyInstanceUid = EnsureRequiredTagIsPresentWithValue(dicomDataset, DicomTag.StudyInstanceUID);
-        string seriesInstanceUid = EnsureRequiredTagIsPresentWithValue(dicomDataset, DicomTag.SeriesInstanceUID);
-        string sopInstanceUid = EnsureRequiredTagIsPresentWithValue(dicomDataset, DicomTag.SOPInstanceUID);
-
-        // Ensure the StudyInstanceUid != SeriesInstanceUid != sopInstanceUid
-        if (studyInstanceUid == seriesInstanceUid ||
-            studyInstanceUid == sopInstanceUid ||
-            seriesInstanceUid == sopInstanceUid)
-        {
-            var tag = studyInstanceUid == seriesInstanceUid ? DicomTag.SeriesInstanceUID :
-                studyInstanceUid == sopInstanceUid ? DicomTag.SOPInstanceUID :
-                seriesInstanceUid == sopInstanceUid ? DicomTag.SOPInstanceUID : null;
-
-            throw new DatasetValidationException(
-                FailureReasonCodes.ValidationFailure,
-                DicomCoreResource.DuplicatedUidsNotAllowed,
-                tag);
-        }
+        EnsureRequiredTagIsPresentWithValue(dicomDataset, DicomTag.SeriesInstanceUID);
+        EnsureRequiredTagIsPresentWithValue(dicomDataset, DicomTag.SOPInstanceUID);
 
         // If the requestedStudyInstanceUid is specified, then the StudyInstanceUid must match, ignoring whitespace.
         if (requiredStudyInstanceUid != null &&

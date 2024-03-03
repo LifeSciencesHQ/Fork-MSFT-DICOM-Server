@@ -53,14 +53,27 @@ internal sealed class SqlInstanceStore : IInstanceStore
         return await store.GetInstanceBatchesAsync(batchSize, batchCount, indexStatus, maxWatermark, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<InstanceMetadata>> GetInstanceIdentifierWithPropertiesAsync(Partition partition, string studyInstanceUid, string seriesInstanceUid = null, string sopInstanceUid = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<InstanceMetadata>> GetInstanceIdentifierWithPropertiesAsync(Partition partition, string studyInstanceUid, string seriesInstanceUid = null, string sopInstanceUid = null, bool isInitialVersion = false, CancellationToken cancellationToken = default)
     {
         ISqlInstanceStore store = await _cache.GetAsync(cancellationToken: cancellationToken);
-        return await store.GetInstanceIdentifierWithPropertiesAsync(partition, studyInstanceUid, seriesInstanceUid, sopInstanceUid, cancellationToken);
+        return await store.GetInstanceIdentifierWithPropertiesAsync(partition, studyInstanceUid, seriesInstanceUid, sopInstanceUid, isInitialVersion, cancellationToken);
     }
     public async Task<IReadOnlyList<WatermarkRange>> GetInstanceBatchesByTimeStampAsync(int batchSize, int batchCount, IndexStatus indexStatus, DateTimeOffset startTimeStamp, DateTimeOffset endTimeStamp, long? maxWatermark = null, CancellationToken cancellationToken = default)
     {
         ISqlInstanceStore store = await _cache.GetAsync(cancellationToken: cancellationToken);
         return await store.GetInstanceBatchesByTimeStampAsync(batchSize, batchCount, indexStatus, startTimeStamp, endTimeStamp, maxWatermark, cancellationToken);
+    }
+    public async Task<IReadOnlyList<WatermarkRange>> GetContentLengthBackFillInstanceBatches(int batchSize, int batchCount, CancellationToken cancellationToken = default)
+    {
+        ISqlInstanceStore store = await _cache.GetAsync(cancellationToken: cancellationToken);
+        return await store.GetContentLengthBackFillInstanceBatches(batchSize, batchCount, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<VersionedInstanceIdentifier>> GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeAsync(
+        WatermarkRange watermarkRange,
+        CancellationToken cancellationToken = default)
+    {
+        ISqlInstanceStore store = await _cache.GetAsync(cancellationToken: cancellationToken);
+        return await store.GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeAsync(watermarkRange, cancellationToken);
     }
 }

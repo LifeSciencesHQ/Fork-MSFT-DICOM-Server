@@ -120,12 +120,22 @@ internal class SqlInstanceStoreV1 : ISqlInstanceStore
         return results;
     }
 
-    public virtual Task<IReadOnlyList<InstanceMetadata>> GetInstanceIdentifierWithPropertiesAsync(Partition partition, string studyInstanceUid, string seriesInstanceUid = null, string sopInstanceUid = null, CancellationToken cancellationToken = default)
+    public virtual Task<IReadOnlyList<InstanceMetadata>> GetInstanceIdentifierWithPropertiesAsync(Partition partition, string studyInstanceUid, string seriesInstanceUid = null, string sopInstanceUid = null, bool isInitialVersion = false, CancellationToken cancellationToken = default)
     {
         throw new BadRequestException(DicomSqlServerResource.SchemaVersionNeedsToBeUpgraded);
     }
 
     public virtual Task<IReadOnlyList<WatermarkRange>> GetInstanceBatchesByTimeStampAsync(int batchSize, int batchCount, IndexStatus indexStatus, DateTimeOffset startTimeStamp, DateTimeOffset endTimeStamp, long? maxWatermark = null, CancellationToken cancellationToken = default)
+    {
+        throw new BadRequestException(DicomSqlServerResource.SchemaVersionNeedsToBeUpgraded);
+    }
+
+    public virtual Task<IReadOnlyList<WatermarkRange>> GetContentLengthBackFillInstanceBatches(int batchSize, int batchCount, CancellationToken cancellationToken = default)
+    {
+        throw new BadRequestException(DicomSqlServerResource.SchemaVersionNeedsToBeUpgraded);
+    }
+
+    public virtual Task<IReadOnlyList<VersionedInstanceIdentifier>> GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeAsync(WatermarkRange watermarkRange, CancellationToken cancellationToken = default)
     {
         throw new BadRequestException(DicomSqlServerResource.SchemaVersionNeedsToBeUpgraded);
     }

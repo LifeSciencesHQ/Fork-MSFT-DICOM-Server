@@ -4,6 +4,8 @@
 // -------------------------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using EnsureThat;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -27,11 +29,14 @@ using Microsoft.Health.Dicom.Api.Features.Conventions;
 using Microsoft.Health.Dicom.Api.Features.Partitioning;
 using Microsoft.Health.Dicom.Api.Features.Routing;
 using Microsoft.Health.Dicom.Api.Features.Swagger;
+using Microsoft.Health.Dicom.Api.Features.Telemetry;
 using Microsoft.Health.Dicom.Api.Logging;
+using Microsoft.Health.Dicom.Core.Configs;
 using Microsoft.Health.Dicom.Core.Extensions;
 using Microsoft.Health.Dicom.Core.Features.Context;
 using Microsoft.Health.Dicom.Core.Features.FellowOakDicom;
 using Microsoft.Health.Dicom.Core.Features.Routing;
+using Microsoft.Health.Dicom.Core.Features.Telemetry;
 using Microsoft.Health.Dicom.Core.Registration;
 using Microsoft.Health.Encryption.Customer.Configs;
 using Microsoft.Health.Encryption.Customer.Extensions;
@@ -53,16 +58,34 @@ public static class DicomServerServiceCollectionExtensions
     public static IDicomServerBuilder AddBackgroundWorkers(this IDicomServerBuilder serverBuilder, IConfiguration configuration)
     {
         EnsureArg.IsNotNull(serverBuilder, nameof(serverBuilder));
+        EnsureArg.IsNotNull(configuration, nameof(configuration));
+
+        FeatureConfiguration featureConfiguration = new FeatureConfiguration();
+        configuration.GetSection("DicomServer").GetSection("Features").Bind(featureConfiguration);
+
         serverBuilder.Services.AddScoped<DeletedInstanceCleanupWorker>();
         serverBuilder.Services.AddHostedService<DeletedInstanceCleanupBackgroundService>();
+        if (featureConfiguration.EnableExternalStore)
+        {
+            serverBuilder.Services.AddHostedService<StartContentLengthBackFillBackgroundService>();
+        }
+
+        HealthCheckPublisherConfiguration healthCheckPublisherConfiguration = new HealthCheckPublisherConfiguration();
+        configuration.GetSection(HealthCheckPublisherConfiguration.SectionName).Bind(healthCheckPublisherConfiguration);
+        IReadOnlyList<string> excludedHealthCheckNames = healthCheckPublisherConfiguration.GetListOfExcludedHealthCheckNames();
 
         serverBuilder.Services
             .AddCustomerKeyValidationBackgroundService(options => configuration
                 .GetSection(CustomerManagedKeyOptions.CustomerManagedKey)
                 .Bind(options))
-            .AddHealthCheckCachePublisher(options => configuration
-                .GetSection("HealthCheckPublisher")
-                .Bind(options));
+            .AddHealthCheckCachePublisher(options =>
+            {
+                configuration
+                    .GetSection(HealthCheckPublisherConfiguration.SectionName)
+                    .Bind(options);
+
+                options.Predicate = (check) => !excludedHealthCheckNames.Contains(check.Name);
+            });
 
         return serverBuilder;
     }
@@ -113,6 +136,7 @@ public static class DicomServerServiceCollectionExtensions
         services.AddSingleton(Options.Create(dicomServerConfiguration.Services.FramesRangeCacheConfiguration));
         services.AddSingleton(Options.Create(dicomServerConfiguration.Services.UpdateServiceSettings));
         services.AddSingleton(Options.Create(dicomServerConfiguration.Services.DataCleanupConfiguration));
+        services.AddSingleton(Options.Create(dicomServerConfiguration.Services.ContentLengthBackFillConfiguration));
 
         services.RegisterAssemblyModules(Assembly.GetExecutingAssembly(), dicomServerConfiguration);
         services.RegisterAssemblyModules(typeof(InitializationModule).Assembly, dicomServerConfiguration);
@@ -121,9 +145,9 @@ public static class DicomServerServiceCollectionExtensions
         services.AddOptions();
 
         services
-            .AddMvc(options =>
+            .AddControllers(options =>
             {
-                options.EnableEndpointRouting = false;
+                options.EnableEndpointRouting = true;
                 options.RespectBrowserAcceptHeader = true;
             })
             .AddJsonSerializerOptions(o => o.ConfigureDefaultDicomSettings());
@@ -163,6 +187,7 @@ public static class DicomServerServiceCollectionExtensions
         services.AddRecyclableMemoryStreamManager(configurationRoot);
 
         services.AddSingleton<ITelemetryInitializer, TelemetryInitializer>();
+        services.AddSingleton<IDicomTelemetryClient, HttpDicomTelemetryClient>();
 
         CustomDicomImplementation.SetDicomImplementationClassUIDAndVersion();
 

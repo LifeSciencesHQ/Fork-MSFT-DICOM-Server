@@ -63,6 +63,8 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
         internal readonly static GetChangeFeedLatestV6Procedure GetChangeFeedLatestV6 = new GetChangeFeedLatestV6Procedure();
         internal readonly static GetChangeFeedV39Procedure GetChangeFeedV39 = new GetChangeFeedV39Procedure();
         internal readonly static GetChangeFeedV6Procedure GetChangeFeedV6 = new GetChangeFeedV6Procedure();
+        internal readonly static GetContentLengthBackFillInstanceBatchesProcedure GetContentLengthBackFillInstanceBatches = new GetContentLengthBackFillInstanceBatchesProcedure();
+        internal readonly static GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeProcedure GetContentLengthBackFillInstanceIdentifiersByWatermarkRange = new GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeProcedure();
         internal readonly static GetCurrentAndNextWorkitemWatermarkProcedure GetCurrentAndNextWorkitemWatermark = new GetCurrentAndNextWorkitemWatermarkProcedure();
         internal readonly static GetExtendedQueryTagProcedure GetExtendedQueryTag = new GetExtendedQueryTagProcedure();
         internal readonly static GetExtendedQueryTagErrorsProcedure GetExtendedQueryTagErrors = new GetExtendedQueryTagErrorsProcedure();
@@ -72,6 +74,7 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
         internal readonly static GetExtendedQueryTagsByKeyProcedure GetExtendedQueryTagsByKey = new GetExtendedQueryTagsByKeyProcedure();
         internal readonly static GetExtendedQueryTagsByOperationProcedure GetExtendedQueryTagsByOperation = new GetExtendedQueryTagsByOperationProcedure();
         internal readonly static GetExtendedQueryTagsV36Procedure GetExtendedQueryTagsV36 = new GetExtendedQueryTagsV36Procedure();
+        internal readonly static GetIndexedFileMetricsProcedure GetIndexedFileMetrics = new GetIndexedFileMetricsProcedure();
         internal readonly static GetInstanceProcedure GetInstance = new GetInstanceProcedure();
         internal readonly static GetInstanceBatchesProcedure GetInstanceBatches = new GetInstanceBatchesProcedure();
         internal readonly static GetInstanceBatchesByTimeStampProcedure GetInstanceBatchesByTimeStamp = new GetInstanceBatchesByTimeStampProcedure();
@@ -79,6 +82,7 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
         internal readonly static GetInstanceWithPropertiesProcedure GetInstanceWithProperties = new GetInstanceWithPropertiesProcedure();
         internal readonly static GetInstanceWithPropertiesV32Procedure GetInstanceWithPropertiesV32 = new GetInstanceWithPropertiesV32Procedure();
         internal readonly static GetInstanceWithPropertiesV46Procedure GetInstanceWithPropertiesV46 = new GetInstanceWithPropertiesV46Procedure();
+        internal readonly static GetInstanceWithPropertiesV58Procedure GetInstanceWithPropertiesV58 = new GetInstanceWithPropertiesV58Procedure();
         internal readonly static GetInstancesByWatermarkRangeProcedure GetInstancesByWatermarkRange = new GetInstancesByWatermarkRangeProcedure();
         internal readonly static GetInstancesByWatermarkRangeV6Procedure GetInstancesByWatermarkRangeV6 = new GetInstancesByWatermarkRangeV6Procedure();
         internal readonly static GetPartitionProcedure GetPartition = new GetPartitionProcedure();
@@ -97,6 +101,7 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
         internal readonly static RetrieveDeletedInstanceV42Procedure RetrieveDeletedInstanceV42 = new RetrieveDeletedInstanceV42Procedure();
         internal readonly static RetrieveDeletedInstanceV6Procedure RetrieveDeletedInstanceV6 = new RetrieveDeletedInstanceV6Procedure();
         internal readonly static UpdateExtendedQueryTagQueryStatusProcedure UpdateExtendedQueryTagQueryStatus = new UpdateExtendedQueryTagQueryStatusProcedure();
+        internal readonly static UpdateFilePropertiesContentLengthProcedure UpdateFilePropertiesContentLength = new UpdateFilePropertiesContentLengthProcedure();
         internal readonly static UpdateFrameMetadataProcedure UpdateFrameMetadata = new UpdateFrameMetadataProcedure();
         internal readonly static UpdateIndexWorkitemInstanceCoreProcedure UpdateIndexWorkitemInstanceCore = new UpdateIndexWorkitemInstanceCoreProcedure();
         internal readonly static UpdateInstanceStatusProcedure UpdateInstanceStatus = new UpdateInstanceStatusProcedure();
@@ -306,6 +311,8 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
             internal readonly NVarCharColumn ETag = new NVarCharColumn("ETag", 4000);
             internal readonly BigIntColumn ContentLength = new BigIntColumn("ContentLength");
             internal readonly Index IXC_FileProperty = new Index("IXC_FileProperty");
+            internal readonly Index IXC_FileProperty_InstanceKey_Watermark_ContentLength = new Index("IXC_FileProperty_InstanceKey_Watermark_ContentLength");
+            internal readonly Index IXC_FileProperty_ContentLength = new Index("IXC_FileProperty_ContentLength");
         }
 
         internal class InstanceTable : Table
@@ -1592,6 +1599,42 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
             }
         }
 
+        internal class GetContentLengthBackFillInstanceBatchesProcedure : StoredProcedure
+        {
+            internal GetContentLengthBackFillInstanceBatchesProcedure() : base("dbo.GetContentLengthBackFillInstanceBatches")
+            {
+            }
+
+            private readonly ParameterDefinition<System.Int32> _batchSize = new ParameterDefinition<System.Int32>("@batchSize", global::System.Data.SqlDbType.Int, false);
+            private readonly ParameterDefinition<System.Int32> _batchCount = new ParameterDefinition<System.Int32>("@batchCount", global::System.Data.SqlDbType.Int, false);
+
+            public void PopulateCommand(SqlCommandWrapper command, System.Int32 batchSize, System.Int32 batchCount)
+            {
+                command.CommandType = global::System.Data.CommandType.StoredProcedure;
+                command.CommandText = "dbo.GetContentLengthBackFillInstanceBatches";
+                _batchSize.AddParameter(command.Parameters, batchSize);
+                _batchCount.AddParameter(command.Parameters, batchCount);
+            }
+        }
+
+        internal class GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeProcedure : StoredProcedure
+        {
+            internal GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeProcedure() : base("dbo.GetContentLengthBackFillInstanceIdentifiersByWatermarkRange")
+            {
+            }
+
+            private readonly ParameterDefinition<System.Int64> _startWatermark = new ParameterDefinition<System.Int64>("@startWatermark", global::System.Data.SqlDbType.BigInt, false);
+            private readonly ParameterDefinition<System.Int64> _endWatermark = new ParameterDefinition<System.Int64>("@endWatermark", global::System.Data.SqlDbType.BigInt, false);
+
+            public void PopulateCommand(SqlCommandWrapper command, System.Int64 startWatermark, System.Int64 endWatermark)
+            {
+                command.CommandType = global::System.Data.CommandType.StoredProcedure;
+                command.CommandText = "dbo.GetContentLengthBackFillInstanceIdentifiersByWatermarkRange";
+                _startWatermark.AddParameter(command.Parameters, startWatermark);
+                _endWatermark.AddParameter(command.Parameters, endWatermark);
+            }
+        }
+
         internal class GetCurrentAndNextWorkitemWatermarkProcedure : StoredProcedure
         {
             internal GetCurrentAndNextWorkitemWatermarkProcedure() : base("dbo.GetCurrentAndNextWorkitemWatermark")
@@ -1782,6 +1825,19 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
             }
         }
 
+        internal class GetIndexedFileMetricsProcedure : StoredProcedure
+        {
+            internal GetIndexedFileMetricsProcedure() : base("dbo.GetIndexedFileMetrics")
+            {
+            }
+
+            public void PopulateCommand(SqlCommandWrapper command)
+            {
+                command.CommandType = global::System.Data.CommandType.StoredProcedure;
+                command.CommandText = "dbo.GetIndexedFileMetrics";
+            }
+        }
+
         internal class GetInstanceProcedure : StoredProcedure
         {
             internal GetInstanceProcedure() : base("dbo.GetInstance")
@@ -1945,6 +2001,32 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
                 _studyInstanceUid.AddParameter(command.Parameters, studyInstanceUid);
                 _seriesInstanceUid.AddParameter(command.Parameters, seriesInstanceUid);
                 _sopInstanceUid.AddParameter(command.Parameters, sopInstanceUid);
+            }
+        }
+
+        internal class GetInstanceWithPropertiesV58Procedure : StoredProcedure
+        {
+            internal GetInstanceWithPropertiesV58Procedure() : base("dbo.GetInstanceWithPropertiesV58")
+            {
+            }
+
+            private readonly ParameterDefinition<System.Byte> _validStatus = new ParameterDefinition<System.Byte>("@validStatus", global::System.Data.SqlDbType.TinyInt, false);
+            private readonly ParameterDefinition<System.Int32> _partitionKey = new ParameterDefinition<System.Int32>("@partitionKey", global::System.Data.SqlDbType.Int, false);
+            private readonly ParameterDefinition<System.String> _studyInstanceUid = new ParameterDefinition<System.String>("@studyInstanceUid", global::System.Data.SqlDbType.VarChar, false, 64);
+            private readonly ParameterDefinition<System.String> _seriesInstanceUid = new ParameterDefinition<System.String>("@seriesInstanceUid", global::System.Data.SqlDbType.VarChar, true, 64);
+            private readonly ParameterDefinition<System.String> _sopInstanceUid = new ParameterDefinition<System.String>("@sopInstanceUid", global::System.Data.SqlDbType.VarChar, true, 64);
+            private readonly ParameterDefinition<System.Nullable<System.Boolean>> _initialVersion = new ParameterDefinition<System.Nullable<System.Boolean>>("@initialVersion", global::System.Data.SqlDbType.Bit, true);
+
+            public void PopulateCommand(SqlCommandWrapper command, System.Byte validStatus, System.Int32 partitionKey, System.String studyInstanceUid, System.String seriesInstanceUid, System.String sopInstanceUid, System.Nullable<System.Boolean> initialVersion)
+            {
+                command.CommandType = global::System.Data.CommandType.StoredProcedure;
+                command.CommandText = "dbo.GetInstanceWithPropertiesV58";
+                _validStatus.AddParameter(command.Parameters, validStatus);
+                _partitionKey.AddParameter(command.Parameters, partitionKey);
+                _studyInstanceUid.AddParameter(command.Parameters, studyInstanceUid);
+                _seriesInstanceUid.AddParameter(command.Parameters, seriesInstanceUid);
+                _sopInstanceUid.AddParameter(command.Parameters, sopInstanceUid);
+                _initialVersion.AddParameter(command.Parameters, initialVersion);
             }
         }
 
@@ -2493,6 +2575,52 @@ namespace Microsoft.Health.Dicom.SqlServer.Features.Schema.Model
                 _tagPath.AddParameter(command.Parameters, tagPath);
                 _queryStatus.AddParameter(command.Parameters, queryStatus);
             }
+        }
+
+        internal class UpdateFilePropertiesContentLengthProcedure : StoredProcedure
+        {
+            internal UpdateFilePropertiesContentLengthProcedure() : base("dbo.UpdateFilePropertiesContentLength")
+            {
+            }
+
+            private readonly FilePropertyTableTypeV2TableValuedParameterDefinition _filePropertiesToUpdate = new FilePropertyTableTypeV2TableValuedParameterDefinition("@filePropertiesToUpdate");
+
+            public void PopulateCommand(SqlCommandWrapper command, global::System.Collections.Generic.IEnumerable<FilePropertyTableTypeV2Row> filePropertiesToUpdate)
+            {
+                command.CommandType = global::System.Data.CommandType.StoredProcedure;
+                command.CommandText = "dbo.UpdateFilePropertiesContentLength";
+                _filePropertiesToUpdate.AddParameter(command.Parameters, filePropertiesToUpdate);
+            }
+
+            public void PopulateCommand(SqlCommandWrapper command, UpdateFilePropertiesContentLengthTableValuedParameters tableValuedParameters)
+            {
+                PopulateCommand(command, filePropertiesToUpdate: tableValuedParameters.FilePropertiesToUpdate);
+            }
+        }
+
+        internal class UpdateFilePropertiesContentLengthTvpGenerator<TInput> : IStoredProcedureTableValuedParametersGenerator<TInput, UpdateFilePropertiesContentLengthTableValuedParameters>
+        {
+            public UpdateFilePropertiesContentLengthTvpGenerator(ITableValuedParameterRowGenerator<TInput, FilePropertyTableTypeV2Row> FilePropertyTableTypeV2RowGenerator)
+            {
+                this.FilePropertyTableTypeV2RowGenerator = FilePropertyTableTypeV2RowGenerator;
+            }
+
+            private readonly ITableValuedParameterRowGenerator<TInput, FilePropertyTableTypeV2Row> FilePropertyTableTypeV2RowGenerator;
+
+            public UpdateFilePropertiesContentLengthTableValuedParameters Generate(TInput input)
+            {
+                return new UpdateFilePropertiesContentLengthTableValuedParameters(FilePropertyTableTypeV2RowGenerator.GenerateRows(input));
+            }
+        }
+
+        internal struct UpdateFilePropertiesContentLengthTableValuedParameters
+        {
+            internal UpdateFilePropertiesContentLengthTableValuedParameters(global::System.Collections.Generic.IEnumerable<FilePropertyTableTypeV2Row> FilePropertiesToUpdate)
+            {
+                this.FilePropertiesToUpdate = FilePropertiesToUpdate;
+            }
+
+            internal global::System.Collections.Generic.IEnumerable<FilePropertyTableTypeV2Row> FilePropertiesToUpdate { get; }
         }
 
         internal class UpdateFrameMetadataProcedure : StoredProcedure

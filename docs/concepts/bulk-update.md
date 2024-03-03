@@ -59,8 +59,8 @@ Example requests can be sent in the [Postman collection](../resources/Conformanc
 Bulk update endpoint starts a long running operation that updates all the instances in the study with the specified attributes.
 
 ```http
-POST ...v1/studies/$bulkUpdate
-POST ...v1/partitions/{PartitionName}/studies/$bulkUpdate
+POST ...v2/studies/$bulkUpdate
+POST ...v2/partitions/{PartitionName}/studies/$bulkUpdate
 ```
 
 #### Request Header
@@ -98,7 +98,7 @@ HTTP/1.1 202 Accepted
 Content-Type: application/json
 {
     "id": "1323c079a1b64efcb8943ef7707b5438",
-    "href": "../v1/operations/1323c079a1b64efcb8943ef7707b5438"
+    "href": "../v2/operations/1323c079a1b64efcb8943ef7707b5438"
 }
 ```
 
@@ -208,6 +208,19 @@ Examples of the request and response of change feed action can be found [here](.
 ### Other APIs
 
 There is no change in other APIs. All the other APIs supports only latest version of instances.
+
+### What changed in DICOM file
+
+As part of bulk update, only DICOM metadata is updated. The pixel data is not updated. Pixel data will be same as the original version.
+
+Other than updating the metadata, the file meta information of the DICOM file is updated with the below information.
+
+| Tag           | Attribute name        | Description           | Value
+| --------------| --------------------- | --------------------- | --------------|
+| (0002,0012)   | Implementation Class UID | Uniquely identifies the implementation that wrote this file and its content. | 1.3.6.1.4.1.311.129 |
+| (0002,0013)   | Implementation Version Name | Identifies a version for an Implementation Class UID (0002,0012) | Assembly version of the DICOM service (e.g. 0.1.4785) |
+
+Here, the UID `1.3.6.1.4.1.311.129` is a registered under [Microsoft OID arc](https://oidref.com/1.3.6.1.4.1.311) in IANA.
 
 #### Limitations
 

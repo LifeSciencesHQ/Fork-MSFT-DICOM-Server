@@ -11,7 +11,8 @@ BEGIN
     SET NOCOUNT     ON
     SET XACT_ABORT  ON
 
-    SELECT  sv.StudyInstanceUid,
+    SELECT  DISTINCT
+            sv.StudyInstanceUid,
             sv.PatientId,
             sv.PatientName,
             sv.ReferringPhysicianName,

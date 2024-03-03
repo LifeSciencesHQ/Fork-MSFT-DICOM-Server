@@ -1,12 +1,9 @@
 # Define the "runtime" image which will run DICOMcast
-FROM mcr.microsoft.com/dotnet/aspnet:7.0.14-alpine3.18-amd64@sha256:f26b8990837b4d8f850c4977adcdb704793ee9c872e4daae7fcb8dcb4b2324c8 AS runtime
-RUN set -x && \
-    addgroup nonroot && \
-    adduser -S -D -H -s /sbin/nologin -G nonroot -g nonroot nonroot
-USER nonroot
+FROM mcr.microsoft.com/dotnet/aspnet:8.0.2-alpine3.18-amd64@sha256:c8c3e7e5ae616527d87131e681ff5400eb2e603f5f69e485cf764f8fc1a64ac5 AS runtime
+USER $APP_UID
 
 # Copy the DICOMcast project and build it
-FROM mcr.microsoft.com/dotnet/sdk:7.0.404-alpine3.18-amd64@sha256:1d56825ce1fdf571dfb9f59880ac02919593097ba22a084966cf9bba0efb3063 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0.201-alpine3.18-amd64@sha256:ba7c7ce462015322e6f34e30e60055000e4e860fe805eb14623557fbe90ec60c AS build
 ARG BUILD_CONFIGURATION=Release
 ARG CONTINUOUS_INTEGRATION_BUILD=false
 WORKDIR /dicom-server

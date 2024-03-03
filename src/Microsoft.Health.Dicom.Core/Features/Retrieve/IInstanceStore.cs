@@ -70,6 +70,16 @@ public interface IInstanceStore
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets identifiers of instances within the given range of watermarks which need content length backfilled.
+    /// </summary>
+    /// <param name="watermarkRange">The watermark range</param>
+    /// <param name="cancellationToken">The cancellation token</param>
+    /// <returns>The instanceidentifiers</returns>
+    Task<IReadOnlyList<VersionedInstanceIdentifier>> GetContentLengthBackFillInstanceIdentifiersByWatermarkRangeAsync(
+        WatermarkRange watermarkRange,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Asynchronously retrieves the specified number of instance batches.
     /// </summary>
     /// <param name="batchSize">The desired size of each batch.</param>
@@ -102,6 +112,7 @@ public interface IInstanceStore
     /// <param name="studyInstanceUid">The study identifier.</param>
     /// <param name="seriesInstanceUid">The series identifier.</param>
     /// <param name="sopInstanceUid">The instance identifier.</param>
+    /// <param name="isInitialVersion">True, if requesting original version. If original version is null it will uses the version.</param>
     /// <param name="cancellationToken">An optional cancellation token.</param>
     /// <returns>Instance identifiers.</returns>
     Task<IReadOnlyList<InstanceMetadata>> GetInstanceIdentifierWithPropertiesAsync(
@@ -109,6 +120,7 @@ public interface IInstanceStore
         string studyInstanceUid,
         string seriesInstanceUid = null,
         string sopInstanceUid = null,
+        bool isInitialVersion = false,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -139,5 +151,27 @@ public interface IInstanceStore
         DateTimeOffset startTimeStamp,
         DateTimeOffset endTimeStamp,
         long? maxWatermark = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously retrieves the specified number of instance batches whose content length needs to be backfilled.
+    /// </summary>
+    /// <param name="batchSize">The desired size of each batch.</param>
+    /// <param name="batchCount">The maximum number of batches.</param>
+    /// <param name="cancellationToken">
+    /// The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.
+    /// </param>
+    /// <returns>
+    /// A task representing the asynchronous get operation. The value of its <see cref="Task{TResult}.Result"/>
+    /// property contains a list of batches as defined by their smallest and largest watermark.
+    /// The size of the collection is at most the value of the <paramref name="batchCount"/> parameter.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="batchSize"/> or <paramref name="batchCount"/> is less than <c>1</c>.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">The <paramref name="cancellationToken"/> was canceled.</exception>
+    Task<IReadOnlyList<WatermarkRange>> GetContentLengthBackFillInstanceBatches(
+        int batchSize,
+        int batchCount,
         CancellationToken cancellationToken = default);
 }
